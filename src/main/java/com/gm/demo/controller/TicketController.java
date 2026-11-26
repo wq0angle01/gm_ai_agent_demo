@@ -4,7 +4,9 @@ import com.gm.demo.entity.domain.TicketCategory;
 import com.gm.demo.entity.domain.TicketStatus;
 import com.gm.demo.entity.request.CreateTicketRequest;
 import com.gm.demo.entity.response.TicketResponse;
+import com.gm.demo.entity.response.WorkflowResponse;
 import com.gm.demo.service.TicketService;
+import com.gm.demo.service.TicketWorkflowOrchestrator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -32,10 +34,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class TicketController {
 
     private final TicketService service;
+    private final TicketWorkflowOrchestrator orchestrator;
 
     @Autowired
-    public TicketController(TicketService service) {
+    public TicketController(TicketService service, TicketWorkflowOrchestrator orchestrator) {
         this.service = service;
+        this.orchestrator = orchestrator;
     }
 
     @PostMapping
@@ -103,6 +107,14 @@ public class TicketController {
     @Operation(summary = "按玩家查工单")
     public List<TicketResponse> byPlayer(@PathVariable String username) {
         return service.findByPlayer(username);
+    }
+
+    @Operation(summary = "多 Agent 自动编排",
+            description = "按 Triage→Support(RAG)→Compliance→Execute 流水线处理 OPEN 工单；"
+                    + "合规通过则自动 resolve，否则停在 PROCESSING 等人工")
+    @PostMapping("/{id}/auto-workflow")
+    public WorkflowResponse autoWorkflow(@PathVariable Long id) {
+        return orchestrator.execute(id);
     }
 
     // ---------- 内部请求体 ----------
