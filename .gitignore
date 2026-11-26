@@ -13,6 +13,7 @@ data/
 .idea/
 *.iml
 .vscode/
+.qoder/
 
 # Real API keys arrive in Phase B; keep them out of the repo from day one
 secrets.properties
